@@ -1,0 +1,12 @@
+<?xml version = "1.0"?>
+<launch>
+
+    <include file="$(find rplidar_ros)/launch/rplidar.launch" />	
+    <include file="/opt/ros/kinetic/share/usb_cam/launch/usb_cam-test.launch" />
+    <include file="$(find vesc_driver)/launch/vesc_driver_node.launch" />
+    <node name="ksh" pkg = "rplidar_ros" type = "rplidar_wasd.py" output="screen">
+    </node>
+    <node name="car" pkg = "ros_speed" type = "move.py" output="screen">
+    </node>
+
+</launch>
