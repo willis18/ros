@@ -168,7 +168,7 @@ class BEVTransform:
         xyr = self.project_pts2img(xyz_r_b)
 
         xyl = self.crop_pts(xyl)
-        xry = self.crop_pts(xyr)
+        xyr = self.crop_pts(xyr)
 
         return xyl, xyr
 
