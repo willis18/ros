@@ -42,7 +42,7 @@ class simple_kinematics :
                 theta_dot = self.speed*sin(self.servo_angle_rad)/self.l/20
 
                 self.odom_msg.pose.pose.position.x = self.odom_msg.pose.pose.position.x+x_dot
-                self.odom_msg.pose.pose.position.y = self.odom_msg.pose.pose.position.y+y_dot
+                self.odom_msg.pose.pose.position.y = self.odom_msg.pose.pose.position.y+y_dot #1060
                 self.theta = self.theta+theta_dot
                 quaternion = quaternion_from_euler(0,0,self.theta)
                 self.odom_msg.pose.pose.orientation.x = quaternion[0]

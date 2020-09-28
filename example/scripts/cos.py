@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# _*_ coding: utf-8 _*_
 import rospy
 import rospkg
 from sensor_msgs.msg import LaserScan,PointCloud, Imu
@@ -19,7 +20,7 @@ class make_path :
         self.path_pub = rospy.Publisher('/path', Path, queue_size= 1)
         self.is_odom = False
         self.path_msg = Path()
-        self.path_msg.header.frame_id = '/odom'
+        self.path_msg.header.frame_id = '/map'
         self.prev_x = 0
         self.prev_y = 0
         rospack = rospkg.RosPack()
