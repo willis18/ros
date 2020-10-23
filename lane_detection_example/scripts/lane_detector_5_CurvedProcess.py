@@ -10,24 +10,25 @@ import time
 from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridgeError
 
-from utils import BEVTransform, CURVEFit, draw_lane_img, purePursuit
+from utils import BEVTransform, CURVEFit, draw_lane_img
 
 class IMGParser:
     def __init__(self, currentPath):
         self.img = None
         #region fixed code cam set
-        self.cameraFeed = True
-        #self.videoPath = currentPath + "/scripts/drive_video/sample_drive.mp4"
+        self.cameraFeed = False
+        self.videoPath = currentPath + "/scripts/drive_video/sample_drive.mp4"
         #self.videoPath = currentPath + "/scripts/drive_video/drive.avi"
         #self.videoPath = currentPath + "/scripts/drive_video/drive_dark.avi"
-        self.videoPath = currentPath + "/scripts/drive_video/drive_high_angle.avi"
-        self.cameraNo = 1
+        # self.videoPath = currentPath + "/scripts/drive_video/drive_high_angle.avi"
+        # self.videoPath = currentPath + "/scripts/drive_video/0929-1620_02.bag"
+        self.cameraNo = 0
         self.cameraWidth = 1280
         self.cameraHeight = 720
         self.frameWidth = 640
         self.frameHeight = 360
-        self.set_cam()
         #endregion
+        self.set_cam()
         
         #region Trackbar side
         self.trackbar_change_flag = False
@@ -250,55 +251,6 @@ class IMGParser:
         return (l_fit_x_int, r_fit_x_int, center)
     #endregion
 
-    #region DrawLane Final View
-    def inv_perspective_warp(self, img,
-                     dst_size=(1280,720),
-                     src=np.float32([(0,0), (1, 0), (0,1), (1,1)]),
-                     dst=np.float32([(0.43,0.65),(0.58,0.65),(0.1,1),(1,1)])):
-        img_size = np.float32([(img.shape[1],img.shape[0])])
-        src = src* img_size
-        # For destination points, I'm arbitrarily choosing some points to be
-        # a nice fit for displaying our warped result
-        # again, not exact, but close enough for our purposes
-        dst = dst * np.float32(dst_size)
-        # Given src and dst points, calculate the perspective transform matrix
-        M = cv2.getPerspectiveTransform(src, dst)
-        # Warp the image using OpenCV warpPerspective()
-
-        #CPU CODE
-        warped = cv2.warpPerspective(img, M, dst_size)
-        #CUDA CODE
-        #img_mat = cv2.cuda_GpuMat()
-        #img_mat.upload(img)
-        #warped_mat = cv2.cuda.warpPerspective(img_mat, M, dst_size)
-        #warped = warped_mat.download()
-
-        return warped
-        
-    def draw_lanes(self, img, left_fit, right_fit, src):
-        ploty = np.linspace(0, img.shape[0] - 1, img.shape[0])
-        color_img = np.zeros_like(img)
-
-        left = np.array([np.transpose(np.vstack([left_fit, ploty]))])
-        right = np.array([np.flipud(np.transpose(np.vstack([right_fit, ploty])))])
-        points = np.hstack((left, right))
-
-        cv2.fillPoly(color_img, np.int_(points), (0, 200, 255))
-        inv_perspective = self.inv_perspective_warp(color_img,(self.frameWidth, self.frameHeight),dst=src)
-
-        #CPU CODE
-        inv_perspective = cv2.addWeighted(img, 0.5, inv_perspective, 0.7, 0)
-        #CUDA CODE
-        '''initial_img_mat = cv2.cuda_GpuMat()
-        img_mat = cv2.cuda_GpuMat()
-        initial_img_mat.upload(inv_perspective)
-        img_mat.upload(img)
-        inv_mat = cv2.cuda.addWeighted(img_mat, 0.5, initial_img_mat, 0.7, 0)
-        inv_perspective = inv_mat.download()'''
-
-        return inv_perspective
-    #endregion
-
     #region CODE BLOCK REGION -> IOELECTRON TRACKBAR CONTROL
     def trackbar_ctrl(self, x):
         self.trackbar_change_flag = True
@@ -313,7 +265,7 @@ class IMGParser:
         cv2.createTrackbar("Top-Y", self.trackbar_name, intialTracbarVals[1], 100, self.trackbar_ctrl)
         cv2.createTrackbar("Bottom-X", self.trackbar_name, intialTracbarVals[2], 100, self.trackbar_ctrl)
         cv2.createTrackbar("Bottom-Y", self.trackbar_name, intialTracbarVals[3], 100, self.trackbar_ctrl)
-        cv2.createTrackbar("Speed", self.trackbar_name, intialCarRef, 10, self.speed_change)
+        cv2.createTrackbar("Speed", self.trackbar_name, intialCarRef, 95, self.speed_change)
         cv2.resizeWindow(self.trackbar_name, 700, 600)
         
     def valTrackbars(self):
@@ -350,7 +302,6 @@ if __name__ == '__main__':
     image_parser = IMGParser(currentPath)
     bev_op = BEVTransform(params_cam=params_cam)
     curve_learner = CURVEFit(order=3)
-    ctrl_lat = purePursuit(lfd=0.8)
 
     rate = rospy.Rate(30)
 
@@ -361,8 +312,6 @@ if __name__ == '__main__':
     src = image_parser.valTrackbars()
     set_speed = image_parser.valTrackbar_speed()
     image_parser.perspectiveWarp_init(src)
-    
-    averageCurve = None
 
     while not rospy.is_shutdown():
         curTime = time.time()
@@ -400,8 +349,8 @@ if __name__ == '__main__':
             lane_curve = 0
             curverad = image_parser.get_curve(imgWarpPoints, curves[0], curves[1])
             lane_curve = np.mean([curverad[0], curverad[1]])
-            
-            #Average
+
+            # ## Average
             currentCurve = lane_curve // 50
             if int(np.sum(image_parser.arrayCurve)) == 0: averageCurve = currentCurve
             else:
@@ -411,21 +360,11 @@ if __name__ == '__main__':
             image_parser.arrayCounter +=1
             if image_parser.arrayCounter >= image_parser.noOfArrayValues : image_parser.arrayCounter=0
             
-            fps_str += " Current:%2.2f" % currentCurve
-            fps_str += " Average:%2.2f" % averageCurve 
+            fps_str += " Current:%0.2f" % currentCurve
+            fps_str += " Average:%0.2f" % averageCurve 
         except:
             fps_str += "Lane Error"
             pass
-
-        #Servo Steer Level: 0.15(L) - 0.5304(C) - 0.85(R)
-        #driving Level: -3000 ~ 3000 RPM
-        dst_steer_level = 0.5304 + float(averageCurve)/100
-
-        fps_str += " dest:%2.2f" % dst_steer_level
-
-        ctrl_lat.pub_cmd(set_speed*500, dst_steer_level)
-
-        imgWarpPoints = image_parser.draw_lanes(imgWarpPoints, curves[0], curves[1], src=src)
 
         cv2.putText(imgWarpPoints, fps_str, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255))
 

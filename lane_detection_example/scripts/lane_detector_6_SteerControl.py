@@ -16,12 +16,13 @@ class IMGParser:
     def __init__(self, currentPath):
         self.img = None
         #region fixed code cam set
-        self.cameraFeed = True
-        #self.videoPath = currentPath + "/scripts/drive_video/sample_drive.mp4"
+        self.cameraFeed = False
+        self.videoPath = currentPath + "/scripts/drive_video/sample_drive.mp4"
         #self.videoPath = currentPath + "/scripts/drive_video/drive.avi"
         #self.videoPath = currentPath + "/scripts/drive_video/drive_dark.avi"
-        self.videoPath = currentPath + "/scripts/drive_video/drive_high_angle.avi"
-        self.cameraNo = 1
+        #self.videoPath = currentPath + "/scripts/drive_video/drive_high_angle.avi"
+        #self.videoPath = currentPath + "/scripts/drive_video/0929-1620_02.bag"
+        self.cameraNo = 0
         self.cameraWidth = 1280
         self.cameraHeight = 720
         self.frameWidth = 640

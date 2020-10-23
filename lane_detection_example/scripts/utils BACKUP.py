@@ -98,14 +98,9 @@ class purePursuit:
 			self.steering=0.5
 			print("no found forward point")
 	
-	def pub_cmd(self, control_speed, steer_lv):
-		#self.position_pub.publish(self.steering)
-		#Servo Steer Level: 0.15(L) - 0.5304(C) - 0.85(R)
-		if steer_lv < 0.15: steer_lv = 0.15
-		if steer_lv > 0.85: steer_lv = 0.85
-		
-		self.position_pub.publish(steer_lv)
-		self.speed_pub.publish(control_speed)
+	def pub_cmd(self):
+		self.position_pub.publish(self.steering)
+		self.speed_pub.publish(1000.0)
 
 class PID_longitudinal:
 	def __init__(self, K=500, safe_dis=1, speed_max=1000):
@@ -408,6 +403,8 @@ class BEVTransform:
 		xyi = xyi[np.logical_and(xyi[:,1]>=0, xyi[:,1]<self.height), :]
 
 		return xyi
+
+
 
 
 def traslationMtx(x,y,z):

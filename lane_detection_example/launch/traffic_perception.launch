@@ -1,6 +1,5 @@
 <launch>
-    <node pkg = "lane_detection_example" type="image_parser.py" name = "lane_detector"/>
-    <node pkg = "lane_detection_example" type="stopline_detector.py" name = "stopline_detector"/>
-    <node pkg = "lane_detection_example" type="traffic_detector.py" name = "traffic_detector"/>
-    
+	<node pkg="lane_detection_example" type="lane_detector.py" name="lane_detector" />
+	<node pkg="lane_detection_example" type="stopline_detector.py" name="stopline_detector" />
+	<node pkg="lane_detection_example" type="light_detector.py" name="light_detector" />
 </launch>
